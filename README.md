@@ -148,27 +148,27 @@ Logika ini diimplementasikan dalam `ScheduleService` dan dijalankan sebelum pros
 ## 🚀 Instalasi & Menjalankan Project
 
 1. Clone repository
-    git clone https://github.com/clyke02/jadwal_kuliah.git
-    cd jadwal_kuliah
+    - git clone https://github.com/clyke02/jadwal_kuliah.git
+    - cd jadwal_kuliah
 
 2. Install dependency
-    composer install
-    npm install
+    - composer install
+    - npm install
 
 3. Setup environment
-    cp .env.example .env
-    php artisan key:generate
+    - cp .env.example .env
+    - php artisan key:generate
 
 
 4. Konfigurasi database pada file `.env`
 5. Jalankan migrasi database
-    php artisan migrate --seed
+    - php artisan migrate --seed
 
 6. Build assets
-    npm run dev
+    - npm run dev
 
 7. Jalankan server
-   php artisan serve
+   - php artisan serve
 
 
 Akses aplikasi melalui:
