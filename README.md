@@ -1,66 +1,217 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 📅 Sistem Manajemen Jadwal Kuliah
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi web berbasis **Laravel**, **Blade**, dan **Tailwind CSS** untuk mengelola jadwal perkuliahan dengan validasi konflik ruangan dan dosen berbasis interval waktu.
 
-## About Laravel
+Project ini dikembangkan sebagai implementasi kompetensi:
+- Pemrograman Berorientasi Objek (OOP)
+- Penggunaan SQL & Relasi Database
+- Penerapan Arsitektur MVC
+- Implementasi Algoritma
+- Validasi & Error Handling
+- Optimasi Query Database
+- Clean Code & Best Practice Laravel
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🎯 Latar Belakang
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Permasalahan umum dalam pengelolaan jadwal kuliah:
 
-## Learning Laravel
+- Terjadi bentrok ruangan
+- Dosen mengajar di waktu yang sama
+- Data tidak terstruktur
+- Validasi manual yang rawan kesalahan
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Aplikasi ini dirancang untuk menyelesaikan permasalahan tersebut dengan pendekatan sistematis dan berbasis constraint database serta algoritma interval waktu.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+---
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🛠️ Tech Stack
 
-## Laravel Sponsors
+- Laravel (PHP Framework)
+- Blade Template Engine
+- Tailwind CSS
+- MySQL
+- Laravel Breeze (Authentication)
+- Eloquent ORM
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## 🧠 Arsitektur Sistem
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+Aplikasi mengikuti prinsip **Separation of Concerns**:
 
-## Contributing
+User Request  
+→ Route  
+→ Controller (koordinasi)  
+→ Form Request (validasi input)  
+→ Service Layer (logika bisnis)  
+→ Model (Eloquent ORM)  
+→ Database  
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Logika bisnis (validasi konflik) dipisahkan dari Controller agar kode lebih bersih, modular, dan mudah diuji.
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## 🗃️ Struktur Database
 
-## Security Vulnerabilities
+### Tabel `users`
+- id
+- name
+- email
+- password
+- role (admin / dosen)
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Tabel `dosens`
+- id
+- name
+- nip
 
-## License
+### Tabel `mata_kuliahs`
+- id
+- kode_mk
+- nama
+- sks
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Tabel `ruangans`
+- id
+- nama
+- kapasitas
+
+### Tabel `jadwals`
+- id
+- mata_kuliah_id (foreign key)
+- dosen_id (foreign key)
+- ruangan_id (foreign key)
+- hari (enum: Senin–Jumat)
+- jam_mulai (time)
+- jam_selesai (time)
+
+Semua relasi dijaga menggunakan foreign key constraint untuk menjaga integritas data.
+
+---
+
+## ⚙️ Algoritma Validasi Konflik Jadwal
+
+Sistem memastikan:
+
+1. Tidak ada dua jadwal dengan ruangan yang sama pada waktu yang bertabrakan.
+2. Tidak ada dosen yang mengajar pada dua kelas dengan waktu yang bertabrakan.
+
+Rumus interval overlap yang digunakan:
+jam_mulai_baru < jam_selesai_lama
+AND
+jam_selesai_baru > jam_mulai_lama
+Logika ini diimplementasikan dalam `ScheduleService` dan dijalankan sebelum proses penyimpanan data menggunakan database transaction untuk menjaga konsistensi.
+
+---
+
+## ✨ Fitur Utama
+
+### 🔐 Authentication
+- Login
+- Logout
+- Role-based access control
+
+### 📊 Dashboard
+- Total dosen
+- Total mata kuliah
+- Total ruangan
+- Total jadwal aktif
+
+### 📚 Data Master
+- CRUD Dosen
+- CRUD Mata Kuliah
+- CRUD Ruangan
+
+### 🗓 Manajemen Jadwal
+- Tambah jadwal
+- Edit jadwal
+- Hapus jadwal
+- Validasi konflik otomatis
+- Tampilan list view
+- Tampilan jadwal mingguan
+
+---
+
+## 📈 Optimasi yang Diterapkan
+
+- Eager loading untuk mencegah N+1 query
+- Database transaction saat menyimpan jadwal
+- Form Request validation
+- Mass assignment protection (`$fillable`)
+- Enum untuk konsistensi data hari
+- Foreign key constraint untuk integritas relasi
+
+---
+
+## 🚀 Instalasi & Menjalankan Project
+
+1. Clone repository
+    - git clone https://github.com/clyke02/jadwal_kuliah.git
+    - cd jadwal_kuliah
+
+2. Install dependency
+    - composer install
+    - npm install
+
+3. Setup environment
+    - cp .env.example .env
+    - php artisan key:generate
+
+
+4. Konfigurasi database pada file `.env`
+5. Jalankan migrasi database
+    - php artisan migrate --seed
+
+6. Build assets
+    - npm run dev
+
+7. Jalankan server
+   - php artisan serve
+
+
+Akses aplikasi melalui:
+http://127.0.0.1:8000
+
+---
+
+## 🧪 Testing & Debugging
+
+- Validasi input menggunakan FormRequest
+- Logging menggunakan Laravel Log
+- Error handling untuk konflik jadwal
+- Pengujian manual untuk edge case waktu
+
+---
+
+## 📸 Screenshot
+
+Tambahkan screenshot berikut untuk memperkuat portofolio:
+- Dashboard
+- Form Tambah Jadwal
+- List Jadwal
+- Tampilan Jadwal Mingguan
+
+---
+
+## 🔮 Pengembangan Selanjutnya
+
+- Unit Testing untuk ScheduleService
+- Notifikasi perubahan jadwal
+- Export jadwal ke PDF
+- REST API endpoint
+- Role mahasiswa
+
+---
+
+## 👤 Author
+
+Nama: Clyke  
+GitHub: https://github.com/clyke02  
+
+---
+
+## 📄 Lisensi
+
+Project ini dibuat untuk keperluan pembelajaran dan portofolio.
