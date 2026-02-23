@@ -90,6 +90,43 @@
                     </form>
                 </div>
             </div>
+
+            @php
+            $btcItems = [
+    [
+        'badge' => 'Service',
+        'title' => 'ScheduleService::updateSchedule() — excludeId',
+        'route' => 'PUT /jadwal/{id}',
+        'desc'  => 'Saat update, cek konflik harus mengecualikan jadwal yang sedang diedit (<code>$excludeId</code>), agar jadwal tidak dianggap konflik dengan dirinya sendiri.',
+        'file'  => 'app/Services/ScheduleService.php',
+        'code'  => <<<'CODE'
+public function updateSchedule(Jadwal $jadwal, array $data): Jadwal
+{
+    return DB::transaction(function () use ($jadwal, $data) {
+        $dataWithUser = array_merge($data, [
+            'user_id' => $jadwal->user_id,
+        ]);
+
+        // excludeId = $jadwal->id agar tidak konflik
+        // dengan dirinya sendiri saat edit
+        $conflicts = $this->checkConflict(
+            $dataWithUser,
+            $jadwal->id
+        );
+
+        if (!empty($conflicts)) {
+            throw new \Exception(implode(' | ', $conflicts));
+        }
+
+        $jadwal->update($data);
+        return $jadwal->fresh();
+    });
+}
+CODE,
+    ],
+            ];
+            @endphp
+            <x-behind-the-code :items="$btcItems" page-title="Edit Jadwal" />
         </div>
     </div>
 </x-app-layout>

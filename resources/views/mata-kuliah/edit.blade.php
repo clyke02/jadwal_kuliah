@@ -38,6 +38,45 @@
                     </form>
                 </div>
             </div>
+
+            @php
+            $btcItems = [
+    [
+        'badge' => 'PHP',
+        'title' => 'MataKuliahController::update()',
+        'route' => 'PUT /mata-kuliah/{id}',
+        'desc'  => 'Method PUT tidak didukung HTML form. Laravel menggunakan <code>@method("PUT")</code> untuk override via field <code>_method</code>.',
+        'file'  => 'app/Http/Controllers/MataKuliahController.php',
+        'code'  => <<<'CODE'
+public function update(UpdateMataKuliahRequest $request, MataKuliah $mataKuliah)
+{
+    abort_if($mataKuliah->user_id !== auth()->id(), 403);
+    $mataKuliah->update($request->validated());
+
+    return redirect()->route('mata-kuliah.index')
+        ->with('success', 'Mata Kuliah berhasil diupdate!');
+}
+CODE,
+        'kompetensi' => ['J.620100.017.02','J.620100.022.02'],
+    ],
+    [
+        'badge' => 'Blade',
+        'title' => '@method("PUT") — Method Spoofing',
+        'route' => '',
+        'desc'  => 'HTML hanya mendukung GET dan POST. Laravel membaca field <code>_method=PUT</code> untuk mengarahkan ke method controller yang benar.',
+        'file'  => 'resources/views/mata-kuliah/edit.blade.php',
+        'code'  => <<<'CODE'
+<form action="{{ route('mata-kuliah.update', $mataKuliah) }}"
+      method="POST">
+    @csrf
+    @method('PUT')
+    {{-- Digenerate: <input type="hidden" name="_method" value="PUT"> --}}
+</form>
+CODE,
+    ],
+            ];
+            @endphp
+            <x-behind-the-code :items="$btcItems" page-title="Edit Mata Kuliah" />
         </div>
     </div>
 </x-app-layout>

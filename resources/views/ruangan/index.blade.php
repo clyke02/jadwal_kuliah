@@ -1,13 +1,8 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Data Ruangan
-            </h2>
-            <a href="{{ route('ruangan.create') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                Tambah Ruangan
-            </a>
-        </div>
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            Data Ruangan
+        </h2>
     </x-slot>
 
     <div class="py-12">
@@ -20,6 +15,11 @@
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
+                    <div class="flex justify-end mb-4">
+                        <a href="{{ route('ruangan.create') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                            Tambah Ruangan
+                        </a>
+                    </div>
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
@@ -65,6 +65,74 @@
                     </div>
                 </div>
             </div>
+
+            @php
+            $btcItems = [
+    [
+        'badge' => 'PHP',
+        'title' => 'RuanganController::index()',
+        'route' => 'GET /ruangan',
+        'desc'  => 'Mengambil data ruangan milik user aktif. Ruangan digunakan sebagai pilihan saat membuat jadwal dan dicek konfliknya oleh ScheduleService.',
+        'file'  => 'app/Http/Controllers/RuanganController.php',
+        'code'  => <<<'CODE'
+public function index()
+{
+    $ruangans = auth()->user()
+        ->ruangans()
+        ->latest()
+        ->paginate(10);
+
+    return view('ruangan.index', compact('ruangans'));
+}
+CODE,
+        'kompetensi' => ['J.620100.017.02','J.620100.018.02','J.620100.021.02'],
+    ],
+    [
+        'badge' => 'Eloquent',
+        'title' => 'Cascade Delete — onDelete("cascade")',
+        'route' => '',
+        'desc'  => 'Saat ruangan dihapus, semua jadwal yang menggunakan ruangan ini ikut terhapus otomatis karena migrasi mendefinisikan <code>onDelete("cascade")</code>.',
+        'file'  => 'database/migrations/create_jadwals_table.php',
+        'code'  => <<<'CODE'
+$table->foreignId('ruangan_id')
+    ->constrained('ruangans')
+    ->onDelete('cascade');
+// Saat ruangan dihapus → jadwal terkait ikut terhapus.
+// Tidak perlu manual delete.
+CODE,
+        'kompetensi' => ['J.620100.021.02','J.620100.022.02'],
+    ],
+    [
+        'badge' => 'SQL',
+        'title' => 'Query SELECT — daftar ruangan',
+        'route' => '',
+        'desc'  => 'Nama ruangan bersifat unik per user. Jika ruangan masih dipakai di jadwal, <code>onDelete(\'cascade\')</code> pada tabel jadwal akan menghapus jadwal terkait secara otomatis.',
+        'file'  => '-- Dieksekusi saat RuanganController::index()',
+        'code'  => <<<'CODE'
+SELECT COUNT(*) AS aggregate
+FROM `ruangans`
+WHERE `user_id` = 1;
+
+SELECT * FROM `ruangans`
+WHERE `user_id` = 1
+ORDER BY `created_at` DESC
+LIMIT 10 OFFSET 0;
+
+-- Struktur tabel ruangans:
+-- CREATE TABLE `ruangans` (
+--   `id`         BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+--   `user_id`    BIGINT UNSIGNED NOT NULL,
+--   `name`       VARCHAR(255) NOT NULL,
+--   `created_at` TIMESTAMP NULL,
+--   `updated_at` TIMESTAMP NULL,
+--   FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+-- );
+CODE,
+        'kompetensi' => ['J.620100.020.02','J.620100.021.02'],
+    ],
+            ];
+            @endphp
+            <x-behind-the-code :items="$btcItems" page-title="Ruangan" />
         </div>
     </div>
 </x-app-layout>

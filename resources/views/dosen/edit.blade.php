@@ -32,6 +32,58 @@
                     </form>
                 </div>
             </div>
+
+            @php
+            $btcItems = [
+    [
+        'badge' => 'PHP',
+        'title' => 'DosenController::update()',
+        'route' => 'PUT /dosen/{id}',
+        'desc'  => '<code>abort_if()</code> memverifikasi kepemilikan data sebelum update. Mencegah user A mengubah data milik user B.',
+        'file'  => 'app/Http/Controllers/DosenController.php',
+        'code'  => <<<'CODE'
+public function update(UpdateDosenRequest $request, Dosen $dosen)
+{
+    abort_if($dosen->user_id !== auth()->id(), 403);
+    $dosen->update($request->validated());
+
+    Log::info('[Dosen] Diupdate', [
+        'user' => auth()->user()->email,
+        'id'   => $dosen->id,
+    ]);
+
+    return redirect()->route('dosen.index')
+        ->with('success', 'Dosen berhasil diupdate!');
+}
+CODE,
+        'kompetensi' => ['J.620100.017.02','J.620100.022.02'],
+    ],
+    [
+        'badge' => 'Request',
+        'title' => 'UpdateDosenRequest — ignore ID saat update',
+        'route' => '',
+        'desc'  => 'Saat update, rule unique harus mengabaikan record saat ini (<code>->ignore($id)</code>) agar tidak error ketika user menyimpan tanpa mengubah NIP.',
+        'file'  => 'app/Http/Requests/UpdateDosenRequest.php',
+        'code'  => <<<'CODE'
+public function rules(): array
+{
+    $id = $this->route('dosen')?->id;
+    return [
+        'nip'  => [
+            'required', 'string', 'max:20',
+            Rule::unique('dosens', 'nip')
+                ->where('user_id', auth()->id())
+                ->ignore($id),
+        ],
+        'name' => ['required', 'string', 'max:255'],
+    ];
+}
+CODE,
+        'kompetensi' => ['J.620100.022.02'],
+    ],
+            ];
+            @endphp
+            <x-behind-the-code :items="$btcItems" page-title="Edit Dosen" />
         </div>
     </div>
 </x-app-layout>

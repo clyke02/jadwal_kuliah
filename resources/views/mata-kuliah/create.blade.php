@@ -37,6 +37,60 @@
                     </form>
                 </div>
             </div>
+
+            @php
+            $btcItems = [
+    [
+        'badge' => 'PHP',
+        'title' => 'MataKuliahController::store()',
+        'route' => 'POST /mata-kuliah',
+        'desc'  => 'Relasi <code>auth()->user()->mataKuliahs()->create()</code> otomatis mengisi <code>user_id</code>. Validasi memastikan kode MK unik per user.',
+        'file'  => 'app/Http/Controllers/MataKuliahController.php',
+        'code'  => <<<'CODE'
+public function store(StoreMataKuliahRequest $request)
+{
+    $mk = auth()->user()
+        ->mataKuliahs()
+        ->create($request->validated());
+
+    return redirect()->route('mata-kuliah.index')
+        ->with('success', 'Mata Kuliah berhasil ditambahkan!');
+}
+CODE,
+        'kompetensi' => ['J.620100.017.02','J.620100.022.02'],
+    ],
+    [
+        'badge' => 'Blade',
+        'title' => '@csrf — CSRF Token Protection',
+        'route' => '',
+        'desc'  => 'Setiap form POST wajib menyertakan <code>@csrf</code>. Laravel menolak request tanpa token yang cocok (HTTP 419 Page Expired).',
+        'file'  => 'resources/views/mata-kuliah/create.blade.php',
+        'code'  => <<<'CODE'
+<form action="{{ route('mata-kuliah.store') }}" method="POST">
+    @csrf
+    {{-- Digenerate menjadi: --}}
+    {{-- <input type="hidden" name="_token" value="..."> --}}
+    <button type="submit">Simpan</button>
+</form>
+CODE,
+    ],
+    [
+        'badge' => 'SQL',
+        'title' => 'Query INSERT — simpan mata kuliah baru',
+        'route' => '',
+        'desc'  => 'Kolom <code>sks</code> divalidasi antara 1–6. Laravel secara otomatis men-cast integer di PHP sebelum INSERT sehingga tidak ada risk type mismatch.',
+        'file'  => '-- Dieksekusi saat MataKuliahController::store()',
+        'code'  => <<<'CODE'
+INSERT INTO `mata_kuliahs`
+    (`user_id`, `kode`, `name`, `sks`, `created_at`, `updated_at`)
+VALUES
+    (1, 'IF301', 'Pemrograman Web', 3, NOW(), NOW());
+CODE,
+        'kompetensi' => ['J.620100.020.02','J.620100.021.02'],
+    ],
+            ];
+            @endphp
+            <x-behind-the-code :items="$btcItems" page-title="Tambah Mata Kuliah" />
         </div>
     </div>
 </x-app-layout>

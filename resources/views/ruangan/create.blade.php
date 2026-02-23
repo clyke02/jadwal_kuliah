@@ -31,6 +31,50 @@
                     </form>
                 </div>
             </div>
+
+            @php
+            $btcItems = [
+    [
+        'badge' => 'PHP',
+        'title' => 'RuanganController::store()',
+        'route' => 'POST /ruangan',
+        'desc'  => 'Nama ruangan unik per user. Validasi dilakukan di <code>StoreRuanganRequest</code> menggunakan <code>Rule::unique</code> yang di-scope ke <code>user_id</code>.',
+        'file'  => 'app/Http/Controllers/RuanganController.php',
+        'code'  => <<<'CODE'
+public function store(StoreRuanganRequest $request)
+{
+    $ruangan = auth()->user()
+        ->ruangans()
+        ->create($request->validated());
+
+    Log::info('[Ruangan] Ditambahkan', [
+        'user' => auth()->user()->email,
+        'nama' => $ruangan->nama,
+    ]);
+
+    return redirect()->route('ruangan.index')
+        ->with('success', 'Ruangan berhasil ditambahkan!');
+}
+CODE,
+        'kompetensi' => ['J.620100.017.02','J.620100.022.02'],
+    ],
+    [
+        'badge' => 'SQL',
+        'title' => 'Query INSERT — simpan ruangan baru',
+        'route' => '',
+        'desc'  => 'Nama ruangan divalidasi unik per user. Contoh: user A boleh punya ruangan "Lab A" dan user B juga boleh punya "Lab A", tapi satu user tidak boleh duplikat.',
+        'file'  => '-- Dieksekusi saat RuanganController::store()',
+        'code'  => <<<'CODE'
+INSERT INTO `ruangans`
+    (`user_id`, `name`, `created_at`, `updated_at`)
+VALUES
+    (1, 'Lab Komputer A', NOW(), NOW());
+CODE,
+        'kompetensi' => ['J.620100.020.02','J.620100.021.02'],
+    ],
+            ];
+            @endphp
+            <x-behind-the-code :items="$btcItems" page-title="Tambah Ruangan" />
         </div>
     </div>
 </x-app-layout>

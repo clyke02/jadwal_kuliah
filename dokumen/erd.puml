@@ -1,0 +1,91 @@
+@startuml ERD Jadwal Kuliah
+
+!define TABLE(name,desc) class name as "desc" << (T,#FFAAAA) >>
+!define PK(x) <u>x</u>
+!define FK(x) <i>x</i>
+
+hide methods
+hide stereotypes
+
+skinparam classBorderColor #555555
+skinparam classBackgroundColor #FEFEFE
+skinparam classHeaderBackgroundColor #4A90D9
+skinparam classFontColor #FFFFFF
+skinparam classHeaderFontColor #FFFFFF
+skinparam ArrowColor #555555
+skinparam linetype ortho
+
+entity users {
+    * PK(id) : bigint
+    --
+    name : varchar(255)
+    email : varchar(255) UNIQUE
+    email_verified_at : timestamp NULL
+    password : varchar(255)
+    remember_token : varchar(100) NULL
+    created_at : timestamp
+    updated_at : timestamp
+}
+
+entity dosens {
+    * PK(id) : bigint
+    --
+    * FK(user_id) : bigint
+    nip : varchar(255)
+    name : varchar(255)
+    created_at : timestamp
+    updated_at : timestamp
+    --
+    UNIQUE (user_id, nip)
+}
+
+entity mata_kuliahs {
+    * PK(id) : bigint
+    --
+    * FK(user_id) : bigint
+    kode_mk : varchar(255)
+    nama : varchar(255)
+    sks : integer
+    created_at : timestamp
+    updated_at : timestamp
+    --
+    UNIQUE (user_id, kode_mk)
+}
+
+entity ruangans {
+    * PK(id) : bigint
+    --
+    * FK(user_id) : bigint
+    nama : varchar(255)
+    kapasitas : integer
+    created_at : timestamp
+    updated_at : timestamp
+    --
+    UNIQUE (user_id, nama)
+}
+
+entity jadwals {
+    * PK(id) : bigint
+    --
+    * FK(user_id) : bigint
+    * FK(mata_kuliah_id) : bigint
+    * FK(dosen_id) : bigint
+    * FK(ruangan_id) : bigint
+    hari : enum(Senin,Selasa,Rabu,Kamis,Jumat)
+    jam_mulai : time
+    jam_selesai : time
+    created_at : timestamp
+    updated_at : timestamp
+}
+
+' Relasi
+users ||--o{ dosens        : "memiliki"
+users ||--o{ mata_kuliahs  : "memiliki"
+users ||--o{ ruangans      : "memiliki"
+users ||--o{ jadwals       : "memiliki"
+
+mata_kuliahs ||--o{ jadwals : "dipakai di"
+dosens       ||--o{ jadwals : "mengajar di"
+ruangans     ||--o{ jadwals : "digunakan di"
+
+@enduml

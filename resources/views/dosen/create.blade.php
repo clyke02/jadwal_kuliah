@@ -31,6 +31,77 @@
                     </form>
                 </div>
             </div>
+
+            @php
+            $btcItems = [
+    [
+        'badge' => 'PHP',
+        'title' => 'DosenController::store()',
+        'route' => 'POST /dosen',
+        'desc'  => 'Data divalidasi oleh <code>StoreDosenRequest</code> sebelum disimpan. Relasi <code>auth()->user()->dosens()->create()</code> otomatis mengisi <code>user_id</code>.',
+        'file'  => 'app/Http/Controllers/DosenController.php',
+        'code'  => <<<'CODE'
+public function store(StoreDosenRequest $request)
+{
+    $dosen = auth()->user()
+        ->dosens()
+        ->create($request->validated());
+
+    Log::info('[Dosen] Ditambahkan', [
+        'user' => auth()->user()->email,
+        'nip'  => $dosen->nip,
+        'nama' => $dosen->name,
+    ]);
+
+    return redirect()->route('dosen.index')
+        ->with('success', 'Dosen berhasil ditambahkan!');
+}
+CODE,
+        'kompetensi' => ['J.620100.017.02','J.620100.022.02'],
+    ],
+    [
+        'badge' => 'Request',
+        'title' => 'StoreDosenRequest — Validasi unik per user',
+        'route' => '',
+        'desc'  => 'Aturan <code>unique</code> di-scope ke <code>user_id</code> aktif. Dua user berbeda boleh punya NIP sama, tapi satu user tidak boleh duplikat.',
+        'file'  => 'app/Http/Requests/StoreDosenRequest.php',
+        'code'  => <<<'CODE'
+public function rules(): array
+{
+    return [
+        'nip'  => [
+            'required', 'string', 'max:20',
+            Rule::unique('dosens', 'nip')
+                ->where('user_id', auth()->id()),
+        ],
+        'name' => ['required', 'string', 'max:255'],
+    ];
+}
+CODE,
+        'kompetensi' => ['J.620100.022.02'],
+    ],
+    [
+        'badge' => 'SQL',
+        'title' => 'Query INSERT — simpan dosen baru',
+        'route' => '',
+        'desc'  => '<code>auth()->user()->dosens()->create()</code> otomatis mengisi <code>user_id</code> dari user yang login. Laravel mengeksekusi INSERT dan langsung mengembalikan model yang baru dibuat.',
+        'file'  => '-- Dieksekusi saat DosenController::store()',
+        'code'  => <<<'CODE'
+INSERT INTO `dosens`
+    (`user_id`, `nip`, `name`, `created_at`, `updated_at`)
+VALUES
+    (1, '1099288388199', 'Sutanto', NOW(), NOW());
+
+-- Jika NIP sudah ada untuk user yang sama → error:
+-- SQLSTATE[23000]: Integrity constraint violation:
+-- 1062 Duplicate entry '1099288388199-1'
+--      for key 'dosens_nip_user_id_unique'
+CODE,
+        'kompetensi' => ['J.620100.020.02','J.620100.021.02'],
+    ],
+            ];
+            @endphp
+            <x-behind-the-code :items="$btcItems" page-title="Tambah Dosen" />
         </div>
     </div>
 </x-app-layout>

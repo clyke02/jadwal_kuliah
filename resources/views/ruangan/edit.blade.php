@@ -32,6 +32,34 @@
                     </form>
                 </div>
             </div>
+
+            @php
+            $btcItems = [
+    [
+        'badge' => 'PHP',
+        'title' => 'RuanganController::update() — Route Model Binding',
+        'route' => 'PUT /ruangan/{id}',
+        'desc'  => 'Route Model Binding Laravel otomatis mengambil objek <code>Ruangan</code> dari database berdasarkan <code>{ruangan}</code> di URL. Tidak perlu <code>Ruangan::find($id)</code> manual.',
+        'file'  => 'app/Http/Controllers/RuanganController.php',
+        'code'  => <<<'CODE'
+// Route Model Binding — Laravel inject objek otomatis:
+// Route: PUT /ruangan/{ruangan}
+//                       ↑ Laravel: Ruangan::findOrFail($id)
+
+public function update(UpdateRuanganRequest $request, Ruangan $ruangan)
+{
+    abort_if($ruangan->user_id !== auth()->id(), 403);
+    $ruangan->update($request->validated());
+
+    return redirect()->route('ruangan.index')
+        ->with('success', 'Ruangan berhasil diupdate!');
+}
+CODE,
+        'kompetensi' => ['J.620100.017.02','J.620100.022.02'],
+    ],
+            ];
+            @endphp
+            <x-behind-the-code :items="$btcItems" page-title="Edit Ruangan" />
         </div>
     </div>
 </x-app-layout>

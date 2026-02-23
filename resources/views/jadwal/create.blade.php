@@ -89,6 +89,111 @@
                     </form>
                 </div>
             </div>
+
+            @php
+            $btcItems = [
+    [
+        'badge' => 'PHP',
+        'title' => 'JadwalController::store() — Service Layer',
+        'route' => 'POST /jadwal',
+        'desc'  => 'Logika pengecekan konflik dipisahkan ke <code>ScheduleService</code> (Service Layer Pattern). Controller hanya bertanggung jawab menerima request dan mengembalikan response.',
+        'file'  => 'app/Http/Controllers/JadwalController.php',
+        'code'  => <<<'CODE'
+public function store(StoreJadwalRequest $request)
+{
+    try {
+        $jadwal = $this->scheduleService->createSchedule(
+            array_merge($request->validated(), ['user_id' => auth()->id()])
+        );
+        return redirect()->route('jadwal.index')
+            ->with('success', 'Jadwal berhasil ditambahkan!');
+    } catch (\Exception $e) {
+        return redirect()->back()
+            ->withInput()
+            ->withErrors(['error' => $e->getMessage()]);
+    }
+}
+CODE,
+        'kompetensi' => ['J.620100.017.02','J.620100.022.02'],
+    ],
+    [
+        'badge' => 'Service',
+        'title' => 'ScheduleService::checkConflict() — Deteksi Bentrok',
+        'route' => '',
+        'desc'  => 'Konflik terjadi jika ruangan atau dosen yang sama terjadwal pada hari dan jam bertumpukan. Logika: <code>mulai A < selesai B AND selesai A > mulai B</code>.',
+        'file'  => 'app/Services/ScheduleService.php',
+        'code'  => <<<'CODE'
+public function checkRoomConflict(
+    int $userId, int $ruanganId,
+    string $hari, string $jamMulai, string $jamSelesai,
+    ?int $excludeId = null
+): ?Jadwal {
+    return Jadwal::with('ruangan')
+        ->where('user_id', $userId)
+        ->where('ruangan_id', $ruanganId)
+        ->where('hari', $hari)
+        ->where(function ($q) use ($jamMulai, $jamSelesai) {
+            $q->where('jam_mulai', '<', $jamSelesai)
+              ->where('jam_selesai', '>', $jamMulai);
+        })
+        ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
+        ->first();
+}
+CODE,
+    ],
+    [
+        'badge' => 'Service',
+        'title' => 'ScheduleService::createSchedule() — DB Transaction',
+        'route' => '',
+        'desc'  => '<code>DB::transaction()</code> memastikan cek konflik dan simpan data terjadi atomik — jika ada error, semua perubahan dibatalkan (rollback).',
+        'file'  => 'app/Services/ScheduleService.php',
+        'code'  => <<<'CODE'
+public function createSchedule(array $data): Jadwal
+{
+    return DB::transaction(function () use ($data) {
+        $conflicts = $this->checkConflict($data);
+
+        if (!empty($conflicts)) {
+            throw new \Exception(implode(' | ', $conflicts));
+        }
+
+        return Jadwal::create($data);
+    });
+}
+CODE,
+        'kompetensi' => ['J.620100.021.02','J.620100.022.02'],
+    ],
+    [
+        'badge' => 'SQL',
+        'title' => 'Query INSERT — simpan jadwal baru',
+        'route' => '',
+        'desc'  => 'Sebelum INSERT, controller mengecek konflik waktu dengan <code>WHERE hari = ? AND ruangan_id = ?</code>. Jika ada overlap jam, transaksi di-rollback dan error dikembalikan ke user.',
+        'file'  => '-- Dieksekusi saat JadwalController::store()',
+        'code'  => <<<'CODE'
+-- Cek konflik jadwal di ruangan & hari yang sama
+SELECT COUNT(*) AS aggregate
+FROM `jadwals`
+WHERE `ruangan_id` = 2
+  AND `hari` = 'Senin'
+  AND `jam_mulai` < '10:00:00'
+  AND `jam_selesai` > '08:00:00'
+  AND `user_id` = 1;
+
+-- Jika tidak ada konflik → INSERT
+INSERT INTO `jadwals` (
+    `user_id`, `dosen_id`, `mata_kuliah_id`,
+    `ruangan_id`, `hari`, `jam_mulai`, `jam_selesai`,
+    `created_at`, `updated_at`
+) VALUES (
+    1, 1, 1, 2, 'Senin',
+    '08:00:00', '10:00:00', NOW(), NOW()
+);
+CODE,
+        'kompetensi' => ['J.620100.020.02','J.620100.021.02'],
+    ],
+            ];
+            @endphp
+            <x-behind-the-code :items="$btcItems" page-title="Tambah Jadwal" />
         </div>
     </div>
 </x-app-layout>

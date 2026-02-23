@@ -6,6 +6,7 @@ use App\Http\Requests\StoreJadwalRequest;
 use App\Http\Requests\UpdateJadwalRequest;
 use App\Models\Jadwal;
 use App\Services\ScheduleService;
+use Illuminate\Support\Facades\Log;
 
 class JadwalController extends Controller
 {
@@ -39,14 +40,16 @@ class JadwalController extends Controller
     public function store(StoreJadwalRequest $request)
     {
         try {
-            $this->scheduleService->createSchedule(
+            $jadwal = $this->scheduleService->createSchedule(
                 array_merge($request->validated(), ['user_id' => auth()->id()])
             );
+            Log::info('[Jadwal] Ditambahkan', ['user' => auth()->user()->email, 'id' => $jadwal->id, 'hari' => $jadwal->hari, 'jam' => $jadwal->jam_mulai . '-' . $jadwal->jam_selesai]);
 
             return redirect()
                 ->route('jadwal.index')
                 ->with('success', 'Jadwal berhasil ditambahkan!');
         } catch (\Exception $e) {
+            Log::error('[Jadwal] Konflik saat tambah', ['user' => auth()->user()->email, 'error' => $e->getMessage()]);
             return redirect()
                 ->back()
                 ->withInput()
@@ -81,11 +84,13 @@ class JadwalController extends Controller
 
         try {
             $this->scheduleService->updateSchedule($jadwal, $request->validated());
+            Log::info('[Jadwal] Diupdate', ['user' => auth()->user()->email, 'id' => $jadwal->id]);
 
             return redirect()
                 ->route('jadwal.index')
                 ->with('success', 'Jadwal berhasil diupdate!');
         } catch (\Exception $e) {
+            Log::error('[Jadwal] Konflik saat update', ['user' => auth()->user()->email, 'id' => $jadwal->id, 'error' => $e->getMessage()]);
             return redirect()
                 ->back()
                 ->withInput()
@@ -96,6 +101,7 @@ class JadwalController extends Controller
     public function destroy(Jadwal $jadwal)
     {
         abort_if($jadwal->user_id !== auth()->id(), 403);
+        Log::warning('[Jadwal] Dihapus', ['user' => auth()->user()->email, 'id' => $jadwal->id]);
 
         $jadwal->delete();
 
